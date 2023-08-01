@@ -1,4 +1,4 @@
-package com.example.pdfreader
+package ui.george
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -18,7 +18,10 @@ class PDFimage  // constructor
 
     // image to display
     var bitmap: Bitmap? = null
-    var paint = Paint(Color.BLUE)
+    var paint = Paint(Color.BLUE).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+    }
 
     // capture touch events (down/move/up) to create a path
     // and use that to create a stroke that we can draw
@@ -29,6 +32,7 @@ class PDFimage  // constructor
                 Log.d(LOGNAME, "Action down")
                 path = Path()
                 path!!.moveTo(event.x, event.y)
+                paths.add(path)
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -36,10 +40,9 @@ class PDFimage  // constructor
                 path!!.lineTo(event.x, event.y)
             }
 
-            MotionEvent.ACTION_UP -> {
-                Log.d(LOGNAME, "Action up")
-                paths.add(path)
-            }
+//            MotionEvent.ACTION_UP -> {
+//                Log.d(LOGNAME, "Action up")
+//            }
         }
         return true
     }

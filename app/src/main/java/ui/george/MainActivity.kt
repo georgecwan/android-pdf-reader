@@ -1,4 +1,4 @@
-package com.example.pdfreader
+package ui.george
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,7 +6,10 @@ import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import android.view.Menu
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.FileOutputStream
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var pdfRenderer: PdfRenderer
     lateinit var parcelFileDescriptor: ParcelFileDescriptor
     var currentPage: PdfRenderer.Page? = null
+    var pageIndex: Int = 0
 
     // custom ImageView class that captures strokes and draws them over the image
     lateinit var pageImage: PDFimage
@@ -32,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val layout = findViewById<LinearLayout>(R.id.pdfLayout)
+        val layout = findViewById<ScrollView>(R.id.pdfLayout)
         layout.isEnabled = true
 
         pageImage = PDFimage(this)
@@ -40,13 +44,20 @@ class MainActivity : AppCompatActivity() {
         pageImage.minimumWidth = 1000
         pageImage.minimumHeight = 2000
 
+        findViewById<TextView>(R.id.pageNumber).text = String.format(
+            getString(R.string.pageNumber),
+            pageIndex,
+            pdfRenderer.pageCount
+        )
+
         // open page 0 of the PDF
         // it will be displayed as an image in the pageImage (above)
         try {
             openRenderer(this)
-            showPage(0)
+            showPage(pageIndex)
             closeRenderer()
-        } catch (exception: IOException) {
+        }
+        catch (exception: IOException) {
             Log.d(LOGNAME, "Error opening PDF")
         }
     }
@@ -55,7 +66,8 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         try {
             closeRenderer()
-        } catch (ex: IOException) {
+        }
+        catch (ex: IOException) {
             Log.d(LOGNAME, "Unable to close PDF renderer")
         }
     }
@@ -104,7 +116,8 @@ class MainActivity : AppCompatActivity() {
 
         if (currentPage != null) {
             // Important: the destination bitmap must be ARGB (not RGB).
-            val bitmap = Bitmap.createBitmap(currentPage!!.getWidth(), currentPage!!.getHeight(), Bitmap.Config.ARGB_8888)
+            val bitmap =
+                Bitmap.createBitmap(currentPage!!.getWidth(), currentPage!!.getHeight(), Bitmap.Config.ARGB_8888)
 
             // Here, we render the page onto the Bitmap.
             // To render a portion of the page, use the second and third parameter. Pass nulls to get the default result.

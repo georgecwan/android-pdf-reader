@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools"
->
+          package="ui.george">
 
     <application
             android:allowBackup="true"
@@ -17,7 +17,8 @@
                 android:name=".MainActivity"
                 android:exported="true"
                 android:label="@string/app_name"
-                android:theme="@style/Theme.PDFReader.NoActionBar">
+                android:theme="@style/Theme.PDFReader.NoActionBar"
+                android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
