@@ -6,14 +6,14 @@ import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import android.view.Menu
-import android.widget.LinearLayout
-import android.widget.ScrollView
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+
 
 // PDF sample code from
 // https://medium.com/@chahat.jain0/rendering-a-pdf-document-in-android-activity-fragment-using-pdfrenderer-442462cb8f9a
@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val layout = findViewById<ScrollView>(R.id.pdfLayout)
+        val layout = findViewById<FrameLayout>(R.id.pdfLayout)
         layout.isEnabled = true
 
         pageImage = PDFimage(this)
@@ -44,18 +44,53 @@ class MainActivity : AppCompatActivity() {
         pageImage.minimumWidth = 1000
         pageImage.minimumHeight = 2000
 
-        findViewById<TextView>(R.id.pageNumber).text = String.format(
-            getString(R.string.pageNumber),
-            pageIndex,
-            pdfRenderer.pageCount
-        )
+        // Navigation
+        findViewById<ImageButton>(R.id.backButton).apply {
+            setOnClickListener {
+                pageIndex -= 1
+                updatePage()
+            }
+        }
+        findViewById<ImageButton>(R.id.nextButton).apply {
+            setOnClickListener {
+                pageIndex += 1
+                updatePage()
+            }
+        }
+
+        // Drawing tools
+        val penButton = findViewById<ImageButton>(R.id.penButton)
+        val highlighterButton = findViewById<ImageButton>(R.id.highlighterButton)
+        val eraserButton = findViewById<ImageButton>(R.id.eraserButton)
+        findViewById<ImageButton>(R.id.penButton).apply {
+            setOnClickListener {
+                pageImage.currentTool = Tool.PEN
+                setBackgroundResource(R.drawable.toggle_button_selected)
+                highlighterButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+                eraserButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+            }
+        }
+        findViewById<ImageButton>(R.id.highlighterButton).apply {
+            setOnClickListener {
+                pageImage.currentTool = Tool.HIGHLIGHTER
+                penButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+                setBackgroundResource(R.drawable.toggle_button_selected)
+                eraserButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+            }
+        }
+        findViewById<ImageButton>(R.id.eraserButton).apply {
+            setOnClickListener {
+                pageImage.currentTool = Tool.ERASER
+                penButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+                highlighterButton.setBackgroundResource(R.drawable.toggle_button_unselected)
+                setBackgroundResource(R.drawable.toggle_button_selected)
+            }
+        }
 
         // open page 0 of the PDF
         // it will be displayed as an image in the pageImage (above)
         try {
-            openRenderer(this)
-            showPage(pageIndex)
-            closeRenderer()
+            updatePage()
         }
         catch (exception: IOException) {
             Log.d(LOGNAME, "Error opening PDF")
@@ -70,6 +105,17 @@ class MainActivity : AppCompatActivity() {
         catch (ex: IOException) {
             Log.d(LOGNAME, "Unable to close PDF renderer")
         }
+    }
+
+    private fun updatePage() {
+        openRenderer(this)
+        showPage()
+        findViewById<TextView>(R.id.pageNumber).text = String.format(
+            getString(R.string.pageNumber),
+            pageIndex + 1,
+            pdfRenderer.pageCount
+        )
+        closeRenderer()
     }
 
     @Throws(IOException::class)
@@ -100,19 +146,27 @@ class MainActivity : AppCompatActivity() {
     @Throws(IOException::class)
     private fun closeRenderer() {
         currentPage?.close()
+        currentPage = null
         pdfRenderer.close()
         parcelFileDescriptor.close()
     }
 
-    private fun showPage(index: Int) {
-        if (pdfRenderer.pageCount <= index) {
+    private fun showPage() {
+        if (pdfRenderer.pageCount <= pageIndex) {
+            pageIndex = pdfRenderer.pageCount - 1
             return
         }
+        else if (0 > pageIndex) {
+            pageIndex = 0
+            return
+        }
+        pageImage.reset(pageIndex)
+
         // Close the current page before opening another one.
         currentPage?.close()
 
         // Use `openPage` to open a specific page in PDF.
-        currentPage = pdfRenderer.openPage(index)
+        currentPage = pdfRenderer.openPage(pageIndex)
 
         if (currentPage != null) {
             // Important: the destination bitmap must be ARGB (not RGB).
@@ -128,4 +182,5 @@ class MainActivity : AppCompatActivity() {
             pageImage.setImage(bitmap)
         }
     }
+
 }

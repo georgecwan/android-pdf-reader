@@ -1,7 +1,8 @@
 George Wan  
 20948342 g8wan
 
-kotlinc-jvm 1.8.21 (jre 17.0.4)  
+IntelliJ IDEA
+Android API 34, extension level 7 platform
 macOS Ventura 13.4.1
 
 Used IntelliJ IDEA version of starter code
