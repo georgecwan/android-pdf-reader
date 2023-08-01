@@ -100,7 +100,8 @@
             android:layout_height="0dp"
             android:orientation="vertical"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+    >
     </FrameLayout>
     <View
             android:id="@+id/solidLineView2"

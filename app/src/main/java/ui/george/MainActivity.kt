@@ -2,6 +2,7 @@ package ui.george
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
@@ -99,12 +100,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        try {
-            closeRenderer()
-        }
-        catch (ex: IOException) {
-            Log.d(LOGNAME, "Unable to close PDF renderer")
-        }
+//        try {
+//            closeRenderer()
+//        }
+//        catch (ex: IOException) {
+//            Log.d(LOGNAME, "Unable to close PDF renderer")
+//        }
     }
 
     private fun updatePage() {
@@ -171,16 +172,46 @@ class MainActivity : AppCompatActivity() {
         if (currentPage != null) {
             // Important: the destination bitmap must be ARGB (not RGB).
             val bitmap =
-                Bitmap.createBitmap(currentPage!!.getWidth(), currentPage!!.getHeight(), Bitmap.Config.ARGB_8888)
+                Bitmap.createBitmap(
+                    currentPage!!.width * 2,
+                    currentPage!!.height * 2,
+                    Bitmap.Config.ARGB_8888
+                )
 
             // Here, we render the page onto the Bitmap.
             // To render a portion of the page, use the second and third parameter. Pass nulls to get the default result.
             // Pass either RENDER_MODE_FOR_DISPLAY or RENDER_MODE_FOR_PRINT for the last parameter.
-            currentPage!!.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            currentPage!!.render(bitmap, null, Matrix().apply {
+                postScale(2f, 2f)
+            }, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
             // Display the page
             pageImage.setImage(bitmap)
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putInt("pageIndex", pageIndex)
+        val data: MutableMap<Int, Map<Tool, MutableList<MutableList<Float>>>> = pageImage.pathPoints
+        outState.putIntegerArrayList("pagePathKeys", ArrayList(data.keys))
+        for (key in data.keys) {
+            val toolMapBundle = Bundle()
+            for (tool in data[key]!!.keys) {
+                val pathList = data[key]!![tool]!!
+                val pathBundle = Bundle()
+                for (i in pathList.indices) {
+                    val path = pathList[i]
+                    val pathArray = FloatArray(path.size)
+                    for (j in path.indices) {
+                        pathArray[j] = path[j]
+                    }
+                    pathBundle.putFloatArray(i.toString(), pathArray)
+                }
+                toolMapBundle.putBundle(tool.toString(), pathBundle)
+            }
+            outState.putBundle(key.toString(), toolMapBundle)
+        }
+    }
 }
